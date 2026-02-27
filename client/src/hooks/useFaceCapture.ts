@@ -16,6 +16,7 @@ interface UseFaceCaptureReturn {
   startCamera: () => Promise<void>;
   stopCamera: () => void;
   captureFace: () => Promise<CaptureResult | null>;
+  processImage: (image: HTMLImageElement | HTMLVideoElement) => Promise<CaptureResult | null>;
   initializeModels: () => Promise<void>;
 }
 
@@ -99,6 +100,66 @@ export function useFaceCapture(): UseFaceCaptureReturn {
     }
   }, []);
 
+  // Processar imagem (câmera ou arquivo)
+  const processImage = useCallback(async (imageElement: HTMLImageElement | HTMLVideoElement): Promise<CaptureResult | null> => {
+    try {
+      if (!canvasRef.current) {
+        throw new Error("Referência de canvas não disponível");
+      }
+
+      if (!modelsLoadedRef.current) {
+        throw new Error("Modelos de face-api não carregados");
+      }
+
+      // Detectar rosto com landmarks e descritor
+      const detections = await faceapi
+        .detectAllFaces(imageElement, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptors();
+
+      if (detections.length === 0) {
+        throw new Error("Nenhum rosto detectado. Por favor, tente outra imagem");
+      }
+
+      if (detections.length > 1) {
+        throw new Error("Múltiplos rostos detectados. Por favor, use uma imagem com apenas um rosto");
+      }
+
+      const detection = detections[0];
+      const embedding = Array.from(detection.descriptor);
+
+      // Desenhar no canvas
+      const canvas = canvasRef.current;
+      const displaySize = {
+        width: imageElement.width,
+        height: imageElement.height,
+      };
+
+      faceapi.matchDimensions(canvas, displaySize);
+      const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+      // Limpar e desenhar no canvas
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+      }
+
+      return {
+        canvas,
+        embedding,
+        detection,
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao processar imagem";
+      setError(errorMessage);
+      console.error("Erro ao processar imagem:", err);
+      return null;
+    }
+  }, []);
+
   // Capturar rosto
   const captureFace = useCallback(async (): Promise<CaptureResult | null> => {
     try {
@@ -110,49 +171,7 @@ export function useFaceCapture(): UseFaceCaptureReturn {
         throw new Error("Modelos de face-api não carregados");
       }
 
-      // Detectar rosto com landmarks e descritor
-      const detections = await faceapi
-        .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptors();
-
-      if (detections.length === 0) {
-        throw new Error("Nenhum rosto detectado. Por favor, posicione seu rosto na câmera");
-      }
-
-      if (detections.length > 1) {
-        throw new Error("Múltiplos rostos detectados. Por favor, posicione apenas um rosto");
-      }
-
-      const detection = detections[0];
-      const embedding = Array.from(detection.descriptor);
-
-      // Desenhar no canvas
-      const canvas = canvasRef.current;
-      const displaySize = {
-        width: videoRef.current.width,
-        height: videoRef.current.height,
-      };
-
-      faceapi.matchDimensions(canvas, displaySize);
-      const resizedDetections = faceapi.resizeResults(detections, displaySize);
-
-      // Limpar canvas
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Desenhar vídeo no canvas
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        // Desenhar detecções
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-      }
-
-      return {
-        canvas,
-        embedding,
-        detection,
-      };
+      return await processImage(videoRef.current);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Erro ao capturar rosto";
       setError(errorMessage);
@@ -170,6 +189,7 @@ export function useFaceCapture(): UseFaceCaptureReturn {
     startCamera,
     stopCamera,
     captureFace,
+    processImage,
     initializeModels,
   };
 }

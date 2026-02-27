@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useFaceCapture } from "@/hooks/useFaceCapture";
-import { AlertCircle, Camera, Check } from "lucide-react";
+import { AlertCircle, Camera, Check, Upload } from "lucide-react";
 
 interface FaceCaptureProps {
   onCapture: (embedding: number[], photoUrl: string) => void;
@@ -11,7 +11,11 @@ interface FaceCaptureProps {
   description?: string;
 }
 
-export function FaceCapture({ onCapture, title = "Captura Facial", description = "Posicione seu rosto na câmera e clique em capturar" }: FaceCaptureProps) {
+export function FaceCapture({
+  onCapture,
+  title = "Captura Facial",
+  description = "Posicione seu rosto na câmera e clique em capturar",
+}: FaceCaptureProps) {
   const {
     videoRef,
     canvasRef,
@@ -21,11 +25,13 @@ export function FaceCapture({ onCapture, title = "Captura Facial", description =
     startCamera,
     stopCamera,
     captureFace,
+    processImage,
   } = useFaceCapture();
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleStartCamera = async () => {
     await startCamera();
@@ -42,13 +48,40 @@ export function FaceCapture({ onCapture, title = "Captura Facial", description =
     try {
       const result = await captureFace();
       if (result) {
-        // Converter canvas para imagem
         const imageUrl = result.canvas.toDataURL("image/jpeg");
         setCapturedImage(imageUrl);
         onCapture(result.embedding, imageUrl);
       }
     } finally {
       setIsCapturing(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsCapturing(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageUrl = e.target?.result as string;
+        const img = new Image();
+        img.onload = async () => {
+          const result = await processImage(img);
+          if (result) {
+            setCapturedImage(imageUrl);
+            onCapture(result.embedding, imageUrl);
+          }
+        };
+        img.src = imageUrl;
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsCapturing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -102,7 +135,7 @@ export function FaceCapture({ onCapture, title = "Captura Facial", description =
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-center">
-              <img src={capturedImage} alt="Captura facial" className="rounded-lg max-w-sm" />
+              <img src={capturedImage} alt="Captura facial" className="rounded-lg max-w-sm max-h-96 object-cover" />
             </div>
             <div className="flex gap-2">
               <Button onClick={handleRetry} variant="outline" className="flex-1">
@@ -143,6 +176,7 @@ export function FaceCapture({ onCapture, title = "Captura Facial", description =
                   autoPlay
                   playsInline
                   muted
+                  style={{ transform: "scaleX(-1)" }}
                 />
                 <canvas
                   ref={canvasRef}
@@ -162,10 +196,28 @@ export function FaceCapture({ onCapture, title = "Captura Facial", description =
 
           <div className="flex gap-2">
             {!isCameraActive ? (
-              <Button onClick={handleStartCamera} className="flex-1" size="lg">
-                <Camera className="w-4 h-4 mr-2" />
-                Iniciar Câmera
-              </Button>
+              <>
+                <Button onClick={handleStartCamera} className="flex-1" size="lg">
+                  <Camera className="w-4 h-4 mr-2" />
+                  Iniciar Câmera
+                </Button>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  size="lg"
+                  disabled={isCapturing}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Anexar Foto
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </>
             ) : (
               <>
                 <Button

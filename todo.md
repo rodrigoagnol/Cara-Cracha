@@ -69,3 +69,14 @@
 - [ ] Testar em diferentes navegadores
 - [ ] Validar segurança de dados
 - [ ] Criar checkpoint final
+
+
+## Ajustes Solicitados
+- [x] Permitir upload de arquivo de foto no cadastro de crianças
+- [x] Permitir upload de arquivo de foto no cadastro de responsáveis
+- [x] Corrigir câmera que não abre imagem no FaceCapture
+- [x] Criar script de mock data com 150 crianças
+- [x] Criar 10 salas de aula
+- [x] Criar 350 responsáveis com autorizações
+- [x] Gerar 5 dias de registros de saída (entrada e saída)
+- [x] Testar sistema com dados realistas (1056 registros gerados)

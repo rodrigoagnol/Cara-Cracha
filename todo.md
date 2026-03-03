@@ -80,3 +80,17 @@
 - [x] Criar 350 responsáveis com autorizações
 - [x] Gerar 5 dias de registros de saída (entrada e saída)
 - [x] Testar sistema com dados realistas (1056 registros gerados)
+
+## Funcionalidade de Upload de Foto
+- [ ] Implementar upload de arquivo de imagem no FaceCapture
+- [ ] Processar imagem enviada para extrair embedding facial
+- [ ] Exibir preview da imagem capturada ou enviada
+- [ ] Permitir trocar entre câmera e upload de arquivo
+- [ ] Validar qualidade da imagem antes de processar
+
+## Debug - Erro em Captura e Upload
+- [ ] Exportar para GitHub para análise
+- [ ] Debugar erro em captura de foto via câmera
+- [ ] Debugar erro em upload de arquivo
+- [ ] Verificar processamento de embedding facial
+- [ ] Testar em diferentes navegadores

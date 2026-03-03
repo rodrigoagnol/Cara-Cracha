@@ -137,7 +137,7 @@ export default function GuardianRegistration() {
                       <SelectItem value="pai">Pai</SelectItem>
                       <SelectItem value="mae">Mãe</SelectItem>
                       <SelectItem value="avo">Avó</SelectItem>
-                      <SelectItem value="avo">Avô</SelectItem>
+                      <SelectItem value="avo_m">Avô</SelectItem>
                       <SelectItem value="tio">Tio</SelectItem>
                       <SelectItem value="tia">Tia</SelectItem>
                       <SelectItem value="irma">Irmã</SelectItem>

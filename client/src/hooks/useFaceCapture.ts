@@ -79,10 +79,20 @@ export function useFaceCapture(): UseFaceCaptureReturn {
       });
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-        };
+        const video = videoRef.current;
+        video.srcObject = stream;
+
+        // garante reprodução
+        video.muted = true;
+
+        try {
+          await video.play();
+        } catch (e) {
+          // fallback: tenta quando metadados carregarem
+          video.onloadedmetadata = () => {
+            video.play().catch(() => null);
+          };
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Erro ao acessar câmera";

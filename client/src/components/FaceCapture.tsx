@@ -34,8 +34,14 @@ export function FaceCapture({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleStartCamera = async () => {
-    await startCamera();
+    // 1) Renderiza o <video> primeiro
     setIsCameraActive(true);
+
+    // 2) Espera 1 frame para o React montar o DOM e preencher o ref
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    // 3) Agora sim inicia a câmera e anexa no videoRef
+    await startCamera();
   };
 
   const handleStopCamera = () => {

@@ -89,8 +89,9 @@
 - [ ] Validar qualidade da imagem antes de processar
 
 ## Debug - Erro em Captura e Upload
-- [ ] Exportar para GitHub para análise
-- [ ] Debugar erro em captura de foto via câmera
-- [ ] Debugar erro em upload de arquivo
-- [ ] Verificar processamento de embedding facial
-- [ ] Testar em diferentes navegadores
+- [x] Exportar para GitHub para análise
+- [x] Debugar erro em captura de foto via câmera
+- [x] Debugar erro em upload de arquivo
+- [x] Verificar processamento de embedding facial
+- [x] Aplicar correção de renderização do video antes de iniciar câmera
+- [x] Aplicar correção de await video.play() com fallback para onloadedmetadata

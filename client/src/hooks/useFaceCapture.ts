@@ -82,13 +82,14 @@ export function useFaceCapture(): UseFaceCaptureReturn {
         const video = videoRef.current;
         video.srcObject = stream;
 
-        // garante reprodução
+        // Recomendado para autoplay em alguns navegadores
         video.muted = true;
+        (video as any).playsInline = true;
 
         try {
           await video.play();
         } catch (e) {
-          // fallback: tenta quando metadados carregarem
+          // Fallback: tenta novamente quando os metadados carregarem
           video.onloadedmetadata = () => {
             video.play().catch(() => null);
           };
@@ -110,7 +111,15 @@ export function useFaceCapture(): UseFaceCaptureReturn {
     }
   }, []);
 
-  // Processar imagem (câmera ou arquivo)
+  
+// Garantir que a câmera seja encerrada ao desmontar o componente
+useEffect(() => {
+  return () => {
+    stopCamera();
+  };
+}, [stopCamera]);
+
+// Processar imagem (câmera ou arquivo)
   const processImage = useCallback(async (imageElement: HTMLImageElement | HTMLVideoElement): Promise<CaptureResult | null> => {
     try {
       if (!canvasRef.current) {

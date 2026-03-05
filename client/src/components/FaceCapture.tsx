@@ -69,25 +69,40 @@ export function FaceCapture({
 
     setIsCapturing(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const imageUrl = e.target?.result as string;
-        const img = new Image();
+      // Lê o arquivo como DataURL para preview e para persistência no backend (se necessário)
+      const imageUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Falha ao ler o arquivo selecionado"));
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      // Carrega a imagem para extrair embedding
+      const img = new Image();
+      const result = await new Promise<Awaited<ReturnType<typeof processImage>> | null>((resolve) => {
         img.onload = async () => {
-          const result = await processImage(img);
-          if (result) {
-            setCapturedImage(imageUrl);
-            onCapture(result.embedding, imageUrl);
+          try {
+            resolve(await processImage(img));
+          } catch (e) {
+            console.error("Erro ao processar imagem enviada:", e);
+            resolve(null);
           }
         };
+        img.onerror = () => {
+          console.error("Falha ao carregar imagem enviada");
+          resolve(null);
+        };
         img.src = imageUrl;
-      };
-      reader.readAsDataURL(file);
+      });
+
+      if (result) {
+        setCapturedImage(imageUrl);
+        onCapture(result.embedding, imageUrl);
+      }
     } finally {
       setIsCapturing(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      // Permite selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -220,6 +235,7 @@ export function FaceCapture({
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  capture="user"
                   onChange={handleFileUpload}
                   className="hidden"
                 />

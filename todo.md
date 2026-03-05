@@ -95,3 +95,10 @@
 - [x] Verificar processamento de embedding facial
 - [x] Aplicar correção de renderização do video antes de iniciar câmera
 - [x] Aplicar correção de await video.play() com fallback para onloadedmetadata
+
+## Correções Aplicadas do Arquivo Referência
+- [x] Aplicar melhorias do arquivo Cara-Cracha-main_PATCHED
+- [x] Adicionar playsInline para melhor compatibilidade
+- [x] Melhorar tratamento de erro no upload de arquivo
+- [x] Adicionar cleanup de câmera ao desmontar componente
+- [x] Adicionar capture="user" para melhor UX em mobile
